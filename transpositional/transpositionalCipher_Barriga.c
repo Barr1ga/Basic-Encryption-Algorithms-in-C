@@ -10,8 +10,8 @@
 #define ENCRYPT 1
 #define DECRYPT 0
 
-char *encrypt(char plainText[], char key[]);
-char *decrypt(char cipherText[], char key[]);
+char *encrypt(char plainText[], char key[], char pad);
+char *decrypt(char cipherText[], char key[], char pad);
 void pause();
 bool requireKey(char key[]);
 void displayMatrix(char **matrix, int colCount, int rowCount);
@@ -19,7 +19,7 @@ double charactersCount(char text[]);
 
 void main() {
   // Initial variable declaration
-  char *cipherText = NULL, *newPlainText = NULL, key[MAX], plainText[MAX];
+  char *cipherText = NULL, *newPlainText = NULL, key[MAX], plainText[MAX], pad;
   int choice;
 
   // Menu page
@@ -29,8 +29,9 @@ void main() {
     printf("[0] Exit\n");
     printf("[1] Set plain text\n");
     printf("[2] Set key\n");
-    printf("[3] Encrypt plain text\n");
-    printf("[4] Decrypt cipher text\n");
+    printf("[3] Set padding character\n");
+    printf("[4] Encrypt plain text\n");
+    printf("[5] Decrypt cipher text\n");
     printf("---------------------\n");
     printf("Plain text: %s\n", plainText);
     printf("Key: %s\n", key);
@@ -54,28 +55,35 @@ void main() {
       scanf("%[^\n]", key);
     }
 
-    // Run polyalphabetic encryption
+    // Request user padding input
     if (choice == 3) {
+      printf("Set padding character: ");
+      fflush(stdin);
+      scanf("%c", &pad);
+    }
+
+    // Run polyalphabetic encryption
+    if (choice == 4) {
       // Fails the cipher if key does not exist
       if (requireKey(key) == true) {
         // If exists, free allocated memory
         if (cipherText != NULL) {
           free(cipherText);
         }
-        cipherText = encrypt(plainText, key);
+        cipherText = encrypt(plainText, key, pad);
         printf("Cipher Text: %s\n", cipherText);
       }
     }
 
     // Run polyalphabetic decryption
-    if (choice == 4) {
+    if (choice == 5) {
       // Fails the cipher if key is not set or >= 0
       if (requireKey(key) == true) {
         // If exists, free allocated memory
         if (newPlainText != NULL) {
           free(newPlainText);
         }
-        newPlainText = decrypt(cipherText, key);
+        newPlainText = decrypt(cipherText, key, pad);
         printf("Plain Text: %s\n", newPlainText);
       }
     }
@@ -112,16 +120,17 @@ void main() {
   *             n  = 2 + 1
   *             n  = 3
 */
-char *encrypt(char plainText[], char key[]) {
+char *encrypt(char plainText[], char key[], char pad) {
   int textIdx, rowIdx, colIdx, colCount = strlen(key), rowCount;
   rowCount = charactersCount(plainText) / colCount;
 
-  printf("%d", colCount);
   // Allocate pointer memory
+  bool *keyChecker = calloc(strlen(key), sizeof(bool));
   char *result = calloc(strlen(plainText), sizeof(char));
   char **matrix = calloc(rowCount, sizeof(char *));
+
   // guard clause to fail cipher if memory wasnt allocated
-  if (matrix == NULL || result == NULL) {
+  if (matrix == NULL || result == NULL || keyChecker == NULL) {
     printf("NULL");
     return NULL;
   }
@@ -132,9 +141,7 @@ char *encrypt(char plainText[], char key[]) {
 
   displayMatrix(matrix, colCount, rowCount);
 
-  printf("strlen = %d\n", strlen(plainText));
-  for (textIdx = 0, colIdx = 0, rowIdx = 0; textIdx < strlen(plainText);
-       textIdx++) {
+  for (textIdx = 0, rowIdx = 0; textIdx < strlen(plainText); textIdx++) {
     // printf("\n%d -> [%d][%d] = %c", textIdx, rowIdx, colIdx,
     //        plainText[textIdx]);
 
@@ -152,80 +159,33 @@ char *encrypt(char plainText[], char key[]) {
     }
   }
 
+  // pad remaining spaces with input character
+  for (; colIdx < colCount; colIdx++) {
+    matrix[rowCount - 1][colIdx] = pad;
+  }
+
   displayMatrix(matrix, colCount, rowCount);
 
-  for (colIdx = 0, rowIdx = 0, textIdx = 0; textIdx < strlen(plainText);
-       textIdx++) {
+  for (int keyIdx, colIdx = 0, rowIdx = rowCount, textIdx = 0;
+       textIdx < strlen(plainText); textIdx++) {
     if (plainText[textIdx] == ' ') {
       result[textIdx] = ' ';
     } else {
-      result[textIdx] = matrix[rowIdx][colIdx];
-
-      if (rowIdx == rowCount - 1) {
+      if (rowIdx == rowCount) {
+        // Identify next least ASCII value in key
+        for (char min = key[0], keyIdx = 0; keyIdx < strlen(key); keyIdx++) {
+          if (keyChecker[keyIdx] == false && key[keyIdx] <= min) {
+            min = key[keyIdx];
+            colIdx = keyIdx;
+          }
+        }
+        keyChecker[colIdx] = true;
         rowIdx = 0;
-        colIdx++;
-      } else {
-        rowIdx++;
       }
-    }
-  }
 
-  return result;
-}
-
-char *decrypt(char cipherText[], char key[]) {
-  int textIdx, rowIdx, colIdx, colCount = strlen(key), rowCount;
-  rowCount = charactersCount(cipherText) / colCount;
-  // Allocate pointer memory
-  char *result = calloc(strlen(cipherText), sizeof(char));
-  char **matrix = calloc(rowCount, sizeof(char *));
-  // guard clause to fail cipher if memory wasnt allocated
-  if (matrix == NULL || result == NULL) {
-    printf("NULL");
-    return NULL;
-  }
-
-  for (rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-    matrix[rowIdx] = calloc(colCount, sizeof(char));
-  }
-
-  displayMatrix(matrix, colCount, rowCount);
-
-  printf("strlen = %d\n", strlen(cipherText));
-  for (textIdx = 0, colIdx = 0, rowIdx = 0; textIdx < strlen(cipherText);
-       textIdx++) {
-    // printf("\n%d -> [%d][%d] = %c", textIdx, rowIdx, colIdx,
-    //        cipherText[textIdx]);
-
-    if (cipherText[textIdx] == ' ') {
-      textIdx++;
-    }
-
-    matrix[colIdx][rowIdx] = cipherText[textIdx];
-
-    if (rowIdx == rowCount - 1) {
-      colIdx++;
-      rowIdx = 0;
-    } else {
+      printf("%d ", colIdx);
+      result[textIdx] = matrix[rowIdx][colIdx];
       rowIdx++;
-    }
-  }
-
-  displayMatrix(matrix, colCount, rowCount);
-
-  for (colIdx = 0, rowIdx = 0, textIdx = 0; textIdx < strlen(cipherText);
-       textIdx++) {
-    if (cipherText[textIdx] == ' ') {
-      result[textIdx] = ' ';
-    } else {
-      result[textIdx] = matrix[colIdx][rowIdx];
-
-      if (colIdx == colCount - 1) {
-        colIdx = 0;
-        rowIdx++;
-      } else {
-        colIdx++;
-      }
     }
   }
 
