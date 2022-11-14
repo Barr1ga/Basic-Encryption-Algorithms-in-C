@@ -24,19 +24,26 @@ void main() {
   // Menu page
   do {
     system("CLS");
-    printf("---------------------\n");
+    printf("-------------------------------\n");
     printf("[0] Exit\n");
     printf("[1] Set plain text\n");
     printf("[2] Set plain text from file\n");
-    printf("[3] Set key\n");
-    printf("[4] Encrypt plain text\n");
-    printf("[5] Decrypt cipher text\n");
-    printf("---------------------\n");
+    printf("[3] Generate key\n");
+    printf("[4] Set key from file\n");
+    printf("[5] Set cipher text\n");
+    printf("[6] Set cipher text from file\n");
+    printf("[7] Encrypt plain text\n");
+    printf("[8] Decrypt cipher text\n");
+    printf("[9] Save plain text to file\n");
+    printf("[10] Save cipher to file\n");
+    printf("[11] Save key to file\n");
+    printf("[12] Save new plain text to file\n");
+    printf("-------------------------------\n");
     printf("Plain text: %s\n", plainText);
     printf("Key: %s\n", key);
     printf("Cipher text: %s\n", cipherText);
     printf("New plain text: %s\n", newPlainText);
-    printf("---------------------\n");
+    printf("-------------------------------\n");
     printf("Choice: ");
     scanf("%d", &choice);
 
@@ -61,19 +68,56 @@ void main() {
       fflush(stdin);
       scanf("%[^\n]", fileName);
       plainText = getFileContent(fileName);
-      printf("test");
+      printf("Plain text: %s\n", plainText);
     }
 
-    // Request user key input
+    // Generate random value key
     if (choice == 3) {
       printf("Set key: ");
       fflush(stdin);
       key = generateKey(plainText);
-      // scanf("%[^\n]", key);
+      printf("Key: %s\n", key);
+    }
+
+    // Request user key from file
+    if (choice == 4) {
+      char fileName[MAX];
+      if (key != NULL) {
+        free(key);
+      }
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      key = getFileContent(fileName);
+      printf("Key: %s\n", key);
+    }
+
+    // Request user cipher text input
+    if (choice == 5) {
+      if (cipherText != NULL) {
+        free(cipherText);
+      }
+      cipherText = calloc(MAX, sizeof(char));
+      printf("Set cipher text: ");
+      fflush(stdin);
+      scanf("%[^\n]", cipherText);
+    }
+
+    // Set cipher text from file
+    if (choice == 6) {
+      char fileName[MAX];
+      if (cipherText != NULL) {
+        free(cipherText);
+      }
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      cipherText = getFileContent(fileName);
+      printf("Cipher text: %s\n", cipherText);
     }
 
     // Run polyalphabetic encryption
-    if (choice == 4) {
+    if (choice == 7) {
       // Fails the cipher if key does not exist
       if (requireKey(key) == true) {
         // If exists, free allocated memory
@@ -86,7 +130,7 @@ void main() {
     }
 
     // Run polyalphabetic decryption
-    if (choice == 5) {
+    if (choice == 8) {
       // Fails the cipher if key does not exist
       if (requireKey(key) == true) {
         // If exists, free allocated memory
@@ -98,6 +142,49 @@ void main() {
       }
     }
 
+    // Save plain text to file
+    if (choice == 9) {
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      if (writeFileContent(plainText, fileName)) {
+        printf("Saved\n");
+      }
+    }
+
+    // Save cipher text to file
+    if (choice == 10) {
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      if (writeFileContent(cipherText, fileName)) {
+        printf("Saved\n");
+      }
+    }
+
+    // Save key to file
+    if (choice == 11) {
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      if (writeFileContent(key, fileName)) {
+        printf("Saved\n");
+      }
+    }
+
+    // Save new plain text to file
+    if (choice == 12) {
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      if (writeFileContent(newPlainText, fileName)) {
+        printf("Saved\n");
+      }
+    }
     pause();
   } while (choice != 0);
 }
@@ -124,13 +211,14 @@ void main() {
 char *vernamCipher(char text[], char *key) {
   // Allocate pointer memory
   char *result = calloc(strlen(text), sizeof(char));
+  int textIdx;
 
   if (result == NULL || checkLength(text, key) == false) {
     return NULL;
   }
 
   // Loop through the text string
-  for (int textIdx = 0; textIdx < strlen(text); textIdx++) {
+  for (textIdx = 0; textIdx < strlen(text); textIdx++) {
     // Check if the current character is a printable character
     if (isgraph(text[textIdx]) && !isspace(text[textIdx])) {
       // If the current character is uppercase, apply the following formula
@@ -152,21 +240,29 @@ char *vernamCipher(char text[], char *key) {
     }
   }
 
+  result[textIdx] = '\0';
   return result;
 }
 
+/*
+ Function to read contents from a file into a text string
+*/
 char *getFileContent(char fileName[]) {
-  int size = 10, textIdx = 0;
+  int size = MAX, textIdx = 0;
   char *result = calloc(size, sizeof(char)), *temp, character;
   FILE *file = fopen(fileName, "r");
 
+  // Guard clause to fail file reading if memory wasnt allocated or file pointer
+  // returns null
   if (result == NULL || file == NULL) {
     return NULL;
   }
 
+  // Loop through the file contents by character
   while ((character = fgetc(file)) != EOF) {
+    // Reallocate memory to fit data if index reaches the last byte
     if (textIdx == size - 1) {
-      size += 10;
+      size += MAX;
       temp = realloc(result, sizeof(char) * size);
       if (temp != NULL) {
         result = temp;
@@ -174,39 +270,53 @@ char *getFileContent(char fileName[]) {
       }
     }
 
+    // Save current character from file
     result[textIdx] = character;
     textIdx++;
   }
-  printf("%s", result);
-  // fclose(file);
-  // fclose(file);
+
+  // Close file pointer
+  fclose(file);
+  result[textIdx] = '\0';
   return result;
 }
 
+/*
+ Function to write contents from a text string into a file
+*/
 bool writeFileContent(char *text, char fileName[]) {
   FILE *file = fopen(fileName, "w");
 
-  if (file == NULL) {
-    printf("There was a problem opening this file!\n");
+  // Guard clause to fail writing if text string and file pointer is null
+  if (file == NULL || text == NULL) {
     return false;
   }
 
+  // Write into file
   fprintf(file, "%s", text);
+
+  // Close file pointer
   fclose(file);
   return true;
 }
 
 /*
- Function to generate random value key equal to the size of text*/
+ Function to generate random value key equal to the size of text
+*/
 char *generateKey(char text[]) {
   char *result = calloc(strlen(text), sizeof(char));
-
+  int textIdx;
   const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for (int textIdx = 0; textIdx < strlen(text); textIdx++) {
+
+  // Iterate N times where N is the size of text
+  for (textIdx = 0; textIdx < strlen(text); textIdx++) {
+    // Generate random int which determines which character to concatenate to
+    // the key string
     int key = rand() % (int)(sizeof charset - 1);
     result[textIdx] = charset[key];
   }
 
+  result[textIdx] = '\0';
   return result;
 }
 
