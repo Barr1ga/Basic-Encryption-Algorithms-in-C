@@ -27,6 +27,11 @@ void main() {
     printf("[3] Encrypt plain text\n");
     printf("[4] Decrypt cipher text\n");
     printf("---------------------\n");
+    printf("Plain text: %s\n", plainText);
+    printf("Key: %s\n", key);
+    printf("Cipher text: %s\n", cipherText);
+    printf("New plain text: %s\n", newPlainText);
+    printf("---------------------\n");
     printf("Choice: ");
     scanf("%d", &choice);
 

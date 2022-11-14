@@ -4,18 +4,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define MAX 100
 
-char *vernamCipher(char text[], char key[]);
-void pause();
+char *vernamCipher(char text[], char *key);
+char *getFileContent(char fileName[]);
+bool writeFileContent(char *text, char fileName[]);
 bool requireKey(char *key);
+char *generateKey(char text[]);
 bool checkLength(char text[], char *key);
+void pause();
 
 void main() {
   // Initial variable declaration
-  char plainText[MAX], key[MAX];
-  char *cipherText = NULL, *newPlainText = NULL;
+  char *key = NULL, *plainText = NULL, *cipherText = NULL, *newPlainText = NULL;
   int choice;
 
   // Menu page
@@ -24,9 +27,10 @@ void main() {
     printf("---------------------\n");
     printf("[0] Exit\n");
     printf("[1] Set plain text\n");
-    printf("[2] Set key\n");
-    printf("[3] Encrypt plain text\n");
-    printf("[4] Decrypt cipher text\n");
+    printf("[2] Set plain text from file\n");
+    printf("[3] Set key\n");
+    printf("[4] Encrypt plain text\n");
+    printf("[5] Decrypt cipher text\n");
     printf("---------------------\n");
     printf("Plain text: %s\n", plainText);
     printf("Key: %s\n", key);
@@ -38,20 +42,38 @@ void main() {
 
     // Request user plain text input
     if (choice == 1) {
+      if (plainText != NULL) {
+        free(plainText);
+      }
+      plainText = calloc(MAX, sizeof(char));
       printf("Set plain text: ");
       fflush(stdin);
       scanf("%[^\n]", plainText);
     }
 
-    // Request user key input
+    // Set plain text from file
     if (choice == 2) {
+      char fileName[MAX];
+      if (plainText != NULL) {
+        free(plainText);
+      }
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      plainText = getFileContent(fileName);
+      printf("test");
+    }
+
+    // Request user key input
+    if (choice == 3) {
       printf("Set key: ");
       fflush(stdin);
-      scanf("%[^\n]", key);
+      key = generateKey(plainText);
+      // scanf("%[^\n]", key);
     }
 
     // Run polyalphabetic encryption
-    if (choice == 3) {
+    if (choice == 4) {
       // Fails the cipher if key does not exist
       if (requireKey(key) == true) {
         // If exists, free allocated memory
@@ -64,7 +86,7 @@ void main() {
     }
 
     // Run polyalphabetic decryption
-    if (choice == 4) {
+    if (choice == 5) {
       // Fails the cipher if key does not exist
       if (requireKey(key) == true) {
         // If exists, free allocated memory
@@ -99,7 +121,7 @@ void main() {
   The following block of code below follows the formula
   in implementing the vernam cipher.
 */
-char *vernamCipher(char text[], char key[]) {
+char *vernamCipher(char text[], char *key) {
   // Allocate pointer memory
   char *result = calloc(strlen(text), sizeof(char));
 
@@ -133,6 +155,61 @@ char *vernamCipher(char text[], char key[]) {
   return result;
 }
 
+char *getFileContent(char fileName[]) {
+  int size = 10, textIdx = 0;
+  char *result = calloc(size, sizeof(char)), *temp, character;
+  FILE *file = fopen(fileName, "r");
+
+  if (result == NULL || file == NULL) {
+    return NULL;
+  }
+
+  while ((character = fgetc(file)) != EOF) {
+    if (textIdx == size - 1) {
+      size += 10;
+      temp = realloc(result, sizeof(char) * size);
+      if (temp != NULL) {
+        result = temp;
+        free(temp);
+      }
+    }
+
+    result[textIdx] = character;
+    textIdx++;
+  }
+  printf("%s", result);
+  // fclose(file);
+  // fclose(file);
+  return result;
+}
+
+bool writeFileContent(char *text, char fileName[]) {
+  FILE *file = fopen(fileName, "w");
+
+  if (file == NULL) {
+    printf("There was a problem opening this file!\n");
+    return false;
+  }
+
+  fprintf(file, "%s", text);
+  fclose(file);
+  return true;
+}
+
+/*
+ Function to generate random value key equal to the size of text*/
+char *generateKey(char text[]) {
+  char *result = calloc(strlen(text), sizeof(char));
+
+  const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (int textIdx = 0; textIdx < strlen(text); textIdx++) {
+    int key = rand() % (int)(sizeof charset - 1);
+    result[textIdx] = charset[key];
+  }
+
+  return result;
+}
+
 void pause() {
   printf("**press any key to continue**\n");
   getch();
@@ -143,7 +220,7 @@ void pause() {
 */
 bool requireKey(char *key) {
   if (key == NULL) {
-    printf("Please enter a valid key!\n");
+    printf("The key you are using is invalid!\n");
     return false;
   }
 

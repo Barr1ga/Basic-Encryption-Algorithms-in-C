@@ -27,6 +27,11 @@ void main() {
     printf("[3] Encrypt Document\n");
     printf("[4] Decrypt Document\n");
     printf("---------------------\n");
+    printf("Plain text: %s\n", doc);
+    printf("Shift count: %d\n", shift);
+    printf("Cipher text: %s\n", cipher);
+    printf("New plain text: %s\n", decryptedDoc);
+    printf("---------------------\n");
     printf("Choice: ");
     scanf("%d", &choice);
 
