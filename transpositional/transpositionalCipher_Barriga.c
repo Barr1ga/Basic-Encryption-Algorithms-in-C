@@ -19,7 +19,8 @@ double charactersCount(char text[]);
 
 void main() {
   // Initial variable declaration
-  char *cipherText = NULL, *newPlainText = NULL, key[MAX], plainText[MAX], pad;
+  char *cipherText = NULL, *newPlainText = NULL, key[MAX], plainText[MAX],
+       pad = (char)0;
   int choice;
 
   // Menu page
@@ -29,9 +30,8 @@ void main() {
     printf("[0] Exit\n");
     printf("[1] Set plain text\n");
     printf("[2] Set key\n");
-    printf("[3] Set padding character\n");
-    printf("[4] Encrypt plain text\n");
-    printf("[5] Decrypt cipher text\n");
+    printf("[3] Encrypt plain text\n");
+    printf("[4] Decrypt cipher text\n");
     printf("---------------------\n");
     printf("Plain text: %s\n", plainText);
     printf("Key: %s\n", key);
@@ -55,35 +55,28 @@ void main() {
       scanf("%[^\n]", key);
     }
 
-    // Request user padding input
-    if (choice == 3) {
-      printf("Set padding character: ");
-      fflush(stdin);
-      scanf("%c", &pad);
-    }
-
     // Run polyalphabetic encryption
-    if (choice == 4) {
+    if (choice == 3) {
       // Fails the cipher if key does not exist
       if (requireKey(key) == true) {
         // If exists, free allocated memory
         if (cipherText != NULL) {
           free(cipherText);
         }
-        cipherText = encrypt(plainText, key, pad);
+        cipherText = encrypt(plainText, key, 'A');
         printf("Cipher Text: %s\n", cipherText);
       }
     }
 
     // Run polyalphabetic decryption
-    if (choice == 5) {
+    if (choice == 4) {
       // Fails the cipher if key is not set or >= 0
       if (requireKey(key) == true) {
         // If exists, free allocated memory
         if (newPlainText != NULL) {
           free(newPlainText);
         }
-        newPlainText = decrypt(cipherText, key, pad);
+        newPlainText = decrypt(cipherText, key, 'B');
         printf("Plain Text: %s\n", newPlainText);
       }
     }
@@ -93,37 +86,30 @@ void main() {
 }
 
 /*
-  Vigenère cipher is the sequence of Caesar ciphers with different
-  transformations on each character of the plain text depending on the current
-  character selected in the key. The current character of the key is determined
-  by looping through all the characters of the key string iteratively similar to
-  a circular array traversal.
+  In cryptography, a transposition cipher, also known as columnar transposition
+  cipher, is a simple and easy to implement cipher. This cipher follows a simple
+  rule for mixing up the characters in the plaintext to form the ciphertext.
 
-  To apply this cipher, manipulate character ASCII values with the ff. formulas:
-  ENCRYPTION: shiftCipher(CHAR) = (TEXT_CHAR - FIRST_VAL + (KEY_CHAR -
-  FIRST_VAL)) % 10 + FIRST_VAL DECRYPTION: shiftCipher(CHAR) = (TEXT_CHAR -
-  FIRST_VAL + (LAST_VAL - (KEY_CHAR - FIRST_VAL))) % 10 + FIRST_VAL
+  ENCRYPTION:
+  To apply this cipher, the characters in the text string is arranged in a
+  level-order format in a matrix whose size is defined by the ff. formula:
+  ROWS = TOTAL_CHARACTERS / COLS, where COLS is equals to the length of
+  the key string.
 
-  The following block of code below follows the formula
-  of the Vigenère cipher in implementing the polyalphabeic cipher.
+  The arranged characters in the matrix are then formed into the cipher through
+  spelling each columns depending on the ASCII value of each character in the
+  key
 
-  Ex. For simplicity, in numbers 1 - 10, Vigenère cipher encrypts and decrypts
-  plain texts by shifting each number(N) by shift(S), where N = 3 and S = 2,
-  follows the ff. pattern:
-  * shiftCipher(3) = (3 - 1 + 2) % 10 + 1
-  *             n  = (4) % 10 + 1
-  *             n  = 4 + 1
-  *             n  = 5
-  * shiftCipher(5) = (5 - 1 + (10 - 2)) % 10 + 1
-  *             n  = (5 - 1 + 8) % 10 + 1
-  *             n  = (12) % 10 + 1
-  *             n  = 2 + 1
-  *             n  = 3
+  DECRYPTION:
+  The same way, the cipher string is arranged in the matrix in each column
+  depending on the ASCII values of each character in the key. The arranged
+  characters are then spelled in a level-order format into the new text string.
 */
 char *encrypt(char plainText[], char key[], char pad) {
   int textIdx, rowIdx, colIdx, colCount = strlen(key), rowCount;
-  rowCount = charactersCount(plainText) / colCount;
-
+  // The total count of characters is extracted from the text string
+  rowCount = ceil(((double)charactersCount(plainText)) / colCount);
+  printf("rowCount: %d", rowCount);
   // Allocate pointer memory
   bool *keyChecker = calloc(strlen(key), sizeof(bool));
   char *result = calloc(strlen(plainText), sizeof(char));
@@ -131,61 +117,148 @@ char *encrypt(char plainText[], char key[], char pad) {
 
   // guard clause to fail cipher if memory wasnt allocated
   if (matrix == NULL || result == NULL || keyChecker == NULL) {
-    printf("NULL");
     return NULL;
   }
 
+  // Allocate memory for each index in each rows of the matrix
   for (rowIdx = 0; rowIdx < rowCount; rowIdx++) {
     matrix[rowIdx] = calloc(colCount, sizeof(char));
   }
 
-  displayMatrix(matrix, colCount, rowCount);
+  // Arrange the text string into the matrix in level-order format. To start,
+  // loop through the text string
+  for (textIdx = 0, colIdx = 0, rowIdx = 0; textIdx < strlen(plainText);
+       textIdx++) {
+    // If the current character is a displayable character, copy that character
+    // into the matrix
+    if (isgraph(plainText[textIdx]) && plainText[textIdx] != pad) {
+      matrix[rowIdx][colIdx] = plainText[textIdx];
 
-  for (textIdx = 0, rowIdx = 0; textIdx < strlen(plainText); textIdx++) {
-    // printf("\n%d -> [%d][%d] = %c", textIdx, rowIdx, colIdx,
-    //        plainText[textIdx]);
+      // Move to the next row in the matrix if the end column is reached
+      if (colIdx == colCount - 1) {
+        rowIdx++;
+        colIdx = 0;
+      } else {
+        colIdx++;
+      }
+    }
+  }
 
-    if (plainText[textIdx] == ' ') {
+  // pad remaining spaces with (makeshift empty character)
+  for (; rowIdx < rowCount && colIdx < colCount; colIdx++) {
+    matrix[rowIdx][colIdx] = pad;
+  }
+
+  // Spell the characters in the matrix to form the cipher. To start, loop
+  // through the text string
+  for (int keyIdx, colIdx = 0, rowIdx = rowCount, textIdx = 0;
+       textIdx < strlen(plainText); textIdx++) {
+    // Copy the current character if it is a space character
+    if (isspace(plainText[textIdx])) {
+      result[textIdx] = plainText[textIdx];
+    } else {
+      if (rowIdx == rowCount) {
+        // Identify unvisited index of least ASCII value character in key
+        for (char min = '~', keyIdx = 0; keyIdx < strlen(key); keyIdx++) {
+          if (keyChecker[keyIdx] == false && key[keyIdx] <= min) {
+            min = key[keyIdx];
+            // Select current index as the column to fill
+            colIdx = keyIdx;
+          }
+        }
+        // Mark that index as visited
+        keyChecker[colIdx] = true;
+        rowIdx = 0;
+      }
+
+      if (isgraph(matrix[rowIdx][colIdx])) {
+        result[textIdx] = matrix[rowIdx][colIdx];
+      } else {
+        textIdx--;
+      }
+
+      rowIdx++;
+    }
+  }
+
+  // problem: cipher should skip the pad characters.
+
+  return result;
+}
+
+char *decrypt(char cipherText[], char key[], char pad) {
+  int textIdx, rowIdx, colIdx, colCount = strlen(key), rowCount;
+  // The total count of characters is extracted from the text string
+  rowCount = ceil(((double)charactersCount(cipherText)) / colCount);
+
+  // Allocate pointer memory
+  bool *keyChecker = calloc(strlen(key), sizeof(bool));
+  char *result = calloc(strlen(cipherText), sizeof(char));
+  char **matrix = calloc(rowCount, sizeof(char *));
+
+  // guard clause to fail cipher if memory wasnt allocated
+  if (matrix == NULL || result == NULL || keyChecker == NULL) {
+    return NULL;
+  }
+
+  // Allocate memory for each index in each rows of the matrix
+  for (rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+    matrix[rowIdx] = calloc(colCount, sizeof(char));
+  }
+
+  // Arrange the text string into the matrix in level-order format. To start,
+  // loop through the text string
+  for (textIdx = 0, rowIdx = rowCount; textIdx < strlen(cipherText);
+       textIdx++) {
+    // Move to the next character in the text string if it is a space character
+    if (isspace(cipherText[textIdx])) {
       textIdx++;
     }
 
-    matrix[rowIdx][colIdx] = plainText[textIdx];
+    if (rowIdx == rowCount) {
+      // Identify unvisited index of least ASCII value character in key
+      for (char min = '~', keyIdx = 0; keyIdx < strlen(key); keyIdx++) {
+        if (keyChecker[keyIdx] == false && key[keyIdx] <= min) {
+          min = key[keyIdx];
+          colIdx = keyIdx;
+        }
+      }
+      // Mark that index as visited
+      keyChecker[colIdx] = true;
+      rowIdx = 0;
+    }
+    matrix[rowIdx][colIdx] = cipherText[textIdx];
+    rowIdx++;
+  }
 
+  // pad remaining spaces (makeshift empty character)
+  for (; rowIdx < rowCount && colIdx < colCount; colIdx++) {
+    matrix[rowCount - 1][colIdx] = pad;
+  }
+
+  // Spell the characters in the matrix in level-order format to form the new
+  // text string. To start, loop through the text string
+  for (textIdx = 0, rowIdx = 0, colIdx = 0; textIdx < strlen(cipherText);
+       textIdx++) {
+    if (cipherText[textIdx] == ' ') {
+      result[textIdx] = cipherText[textIdx];
+      textIdx++;
+    }
+
+    // If the current character is a displayable character, copy that character
+    // into the text string (result)
+    if (isgraph(matrix[rowIdx][colIdx])) {
+      result[textIdx] = matrix[rowIdx][colIdx];
+    } else {
+      textIdx--;
+    }
+
+    // Move to the next column in the matrix if the end row is reached
     if (colIdx == colCount - 1) {
       rowIdx++;
       colIdx = 0;
     } else {
       colIdx++;
-    }
-  }
-
-  // pad remaining spaces with input character
-  for (; colIdx < colCount; colIdx++) {
-    matrix[rowCount - 1][colIdx] = pad;
-  }
-
-  displayMatrix(matrix, colCount, rowCount);
-
-  for (int keyIdx, colIdx = 0, rowIdx = rowCount, textIdx = 0;
-       textIdx < strlen(plainText); textIdx++) {
-    if (plainText[textIdx] == ' ') {
-      result[textIdx] = ' ';
-    } else {
-      if (rowIdx == rowCount) {
-        // Identify next least ASCII value in key
-        for (char min = key[0], keyIdx = 0; keyIdx < strlen(key); keyIdx++) {
-          if (keyChecker[keyIdx] == false && key[keyIdx] <= min) {
-            min = key[keyIdx];
-            colIdx = keyIdx;
-          }
-        }
-        keyChecker[colIdx] = true;
-        rowIdx = 0;
-      }
-
-      printf("%d ", colIdx);
-      result[textIdx] = matrix[rowIdx][colIdx];
-      rowIdx++;
     }
   }
 
@@ -211,12 +284,11 @@ bool requireKey(char *key) {
 
 double charactersCount(char text[]) {
   double count = 0;
-  for (int textIdx = 0; textIdx <= strlen(text); textIdx++) {
-    if (text[textIdx] != ' ') {
-      count++;
+  for (int textIdx = 0; textIdx < strlen(text); textIdx++) {
+    if (!isspace(text[textIdx])) {
+      count += 1;
     }
   }
-
   return count;
 }
 
