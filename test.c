@@ -1,8 +1,7 @@
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 void main() {
-  double quo = (double)26 / 3;
-  printf("%lf\n", quo);
-  printf("%lf", ceil(quo));
+  printf("%d", 3 ^ 4);
 }
