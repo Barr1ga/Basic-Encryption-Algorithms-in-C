@@ -27,7 +27,7 @@ void main() {
 
   // Menu page
   do {
-    // system("CLS");
+    system("CLS");
     printf("---------------------\n");
     printf("[0] Exit\n");
     printf("[1] Set plain text\n");
@@ -77,10 +77,13 @@ void main() {
 
     // Request user key input
     if (choice == 3) {
+      if (key != NULL) {
+        free(key);
+      }
+      key = calloc(MAX, sizeof(char));
       printf("Set key: ");
       fflush(stdin);
-      key = generateKey(plainText);
-      printf("Key: %s\n", key);
+      scanf("%[^\n]", key);
     }
 
     // Request user key from file

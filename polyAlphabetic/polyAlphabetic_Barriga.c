@@ -117,7 +117,7 @@ void main() {
     }
 
     // Run polyalphabetic encryption
-    if (choice == 6) {
+    if (choice == 7) {
       // Fails the cipher if key does not exist
       if (requireKey(key) == true) {
         // If exists, free allocated memory
@@ -218,6 +218,8 @@ void main() {
   *             n  = 2 + 1
   *             n  = 3
 */
+// v
+// cab
 char *polyAlphabeticCipher(char plainText[], char key[], char action[]) {
   int textIdx, keyIdx;
   // Allocate pointer memory
