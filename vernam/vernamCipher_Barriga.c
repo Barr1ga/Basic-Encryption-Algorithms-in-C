@@ -222,19 +222,15 @@ char *vernamCipher(char text[], char *key) {
     // Check if the current character is a printable character
     if (isgraph(text[textIdx]) && !isspace(text[textIdx])) {
       // If the current character is uppercase, apply the following formula
+      result[textIdx] =
+          ((tolower(text[textIdx]) - 'a') ^ (tolower(key[textIdx]) - 'a')) %
+              26 +
+          'a';
+      // If the current character in the text is uppercase, convert the current
+      // resulting character to uppercase
       if (isupper(text[textIdx])) {
-        result[textIdx] =
-            ((text[textIdx] - 'A') ^ (tolower(key[textIdx]) - 'a')) % 26 + 'a';
+        result[textIdx] = toupper(result[textIdx]);
       }
-
-      // If the current character is lowercase, apply the following formula
-      if (islower(text[textIdx])) {
-        result[textIdx] =
-            ((text[textIdx] - 'a') ^ (tolower(key[textIdx]) - 'a')) % 26 + 'a';
-      }
-
-      // If the current character is not printable, directly copy the current
-      // character into the resulting string
     } else {
       result[textIdx] = text[textIdx];
     }
