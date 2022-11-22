@@ -32,8 +32,11 @@ void main() {
   // Initial variable declaration
   char *primeString = NULL, *plainText = NULL, *cipherText = NULL,
        *newPlainText = NULL;
-  int primeP = -1, primeQ = -1, privateKey = -1, publicKey = -1, product = -1,
-      totient = -1, choice;
+  // int primeP = -1, primeQ = -1, privateKey = -1, publicKey = -1, product =
+  // -1,
+  //     totient = -1, choice;
+  int primeP = 2, primeQ = 13, privateKey = -1, publicKey = 5, product = 26,
+      totient = 12, choice;
 
   // Menu page
   do {
@@ -273,8 +276,9 @@ char *rsa(char text[], int key, int product) {
   }
   printf("rsa\n");
   for (textIdx = 0; textIdx < strlen(text); textIdx++) {
-    temp = pow((double)text[textIdx], (double)key);
-    printf("%d %lld %d\n", text[textIdx], temp, temp % product);
+    temp = (long long int)pow((double)text[textIdx], (double)key);
+    printf("%d %d %d\n", text[textIdx], temp,
+           (long long int)pow((double)text[textIdx], (double)key) % product);
     if (isgraph(text[textIdx])) {
       result[textIdx] = temp % product;
     } else {
