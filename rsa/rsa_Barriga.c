@@ -282,6 +282,7 @@ char *rsa(char text[], int key, int product) {
     }
   }
 
+
   return result;
 }
 
