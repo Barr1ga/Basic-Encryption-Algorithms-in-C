@@ -31,8 +31,8 @@ long long int power(char base, int power);
 
 void main() {
   // Initial variable declaration
-  char *primeString = NULL, *plainText = NULL, *cipherText = NULL,
-       *newPlainText = NULL;
+  char *primeString = NULL, *keyString = NULL, *plainText = NULL,
+       *cipherText = NULL, *newPlainText = NULL;
   // int primeP = -1, primeQ = -1, privateKey = -1, publicKey = -1, product =
   // -1,
   //     totient = -1, choice;
@@ -145,6 +145,16 @@ void main() {
 
     // Set public key from file
     if (choice == 8) {
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      if (keyString != NULL) {
+        free(keyString);
+      }
+      keyString = getFileContent(fileName);
+      publicKey = atoi(keyString);
+      printf("Public key: %d\n", publicKey);
     }
 
     // Set private key
@@ -158,6 +168,16 @@ void main() {
 
     // Set private key from file
     if (choice == 10) {
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      if (keyString != NULL) {
+        free(keyString);
+      }
+      keyString = getFileContent(fileName);
+      publicKey = atoi(keyString);
+      printf("Public key: %d\n", publicKey);
     }
 
     // Request user cipher text input
