@@ -277,8 +277,8 @@ char *rsa(char text[], int key, int product) {
   printf("rsa\n");
   for (textIdx = 0; textIdx < strlen(text); textIdx++) {
     temp = (long long int)pow((double)text[textIdx], (double)key);
-    printf("%d %d %d\n", text[textIdx], temp,
-           (long long int)pow((double)text[textIdx], (double)key) % product);
+    printf("%d %d %c\n", text[textIdx], temp,
+           ((long long int)pow((double)text[textIdx], (double)key)) % product);
     if (isgraph(text[textIdx])) {
       result[textIdx] = temp % product;
     } else {
