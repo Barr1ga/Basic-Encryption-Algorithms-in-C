@@ -277,19 +277,17 @@ char *rsa(char text[], int key, int product) {
   printf("rsa\n");
   for (textIdx = 0; textIdx < strlen(text); textIdx++) {
     if (isgraph(text[textIdx])) {
-      printf("%d, %d, %lld\n", currentChar, currentChar, temp);
+      printf("%c, %d, %lld\n", text[textIdx], currentChar, temp);
 
-      if (isupper(result[textIdx])) {
+      if (isupper(text[textIdx])) {
         result[textIdx] =
-            (((long long int)pow((result[textIdx] - 'A'), key) % product) %
-             26) +
+            (((long long int)pow((text[textIdx] - 'A'), key) % product) % 26) +
             'A';
       }
 
-      if (islower(result[textIdx])) {
+      if (islower(text[textIdx])) {
         result[textIdx] =
-            (((long long int)pow((result[textIdx] - 'a'), key) % product) %
-             26) +
+            (((long long int)pow((text[textIdx] - 'a'), key) % product) % 26) +
             'a';
       }
     } else {
