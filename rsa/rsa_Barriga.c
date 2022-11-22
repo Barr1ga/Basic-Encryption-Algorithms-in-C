@@ -16,6 +16,7 @@ char *getFileContent(char fileName[]);
 void setPrimePairsFromString(char *primePairString, int *primeP, int *primeQ);
 void pause();
 void setPublicKey(int *publicKey, int totient);
+void setPrimePairFromString(char *primeString, int *primeP, int *primeQ);
 void setPrivateKey(int *privateKey, int publicKey, int totient);
 void setProduct(int *product, int primeP, int primeQ);
 void setTotient(int *totient, int primeP, int primeQ);
@@ -26,7 +27,7 @@ bool isFactorOfNumber(int x, int number);
 bool requirePrimePair(int primeP, int primeQ);
 bool requireTotient(int totient);
 bool requirePublicKey(int publicKey);
-long int power(char character, int power);
+long long int power(char base, int power);
 
 void main() {
   // Initial variable declaration
@@ -107,11 +108,12 @@ void main() {
 
     // Set prime pair from file
     if (choice == 4) {
-      // char fileName[MAX];
-      // printf("File name: ");
-      // fflush(stdin);
-      // scanf("%[^\n]", fileName);
-      // fileContent = getFileContent(fileName);
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+      primeString = getFileContent(fileName);
+      setPrimePairFromString(primeString, &primeP, &primeQ);
     }
 
     // Set product
@@ -268,27 +270,23 @@ void main() {
 */
 char *rsa(char text[], int key, int product) {
   char *result = calloc(strlen(text), sizeof(char));
-  int textIdx, currentChar;
-  long long int temp;
+  int textIdx;
 
   if (result == NULL && key == -1) {
     return NULL;
   }
   printf("rsa\n");
+  printf("key: %d\n", key);
   for (textIdx = 0; textIdx < strlen(text); textIdx++) {
-    if (isgraph(text[textIdx])) {
-      printf("%c, %d, %lld\n", text[textIdx], currentChar, temp);
-
+    if (isgraph(text[textIdx]) && !isspace(text[textIdx])) {
       if (isupper(text[textIdx])) {
         result[textIdx] =
-            (((long long int)pow((text[textIdx] - 'A'), key) % product) % 26) +
-            'A';
+            (char)((power((text[textIdx] - 'A'), key) % product) + 'A');
       }
 
       if (islower(text[textIdx])) {
         result[textIdx] =
-            (((long long int)pow((text[textIdx] - 'a'), key) % product) % 26) +
-            'a';
+            (char)((power((text[textIdx] - 'a'), key) % product) + 'a');
       }
     } else {
       result[textIdx] = text[textIdx];
@@ -338,6 +336,23 @@ void setPrivateKey(int *privateKey, int publicKey, int totient) {
   }
 
   *privateKey = tempNum;
+}
+
+/*
+  Function to set prime pair from string
+*/
+void setPrimePairFromString(char *primeString, int *primeP, int *primeQ) {
+  int idx;
+
+  for (idx = 0; idx < strlen(primeString); idx++) {
+    if (primeString[idx] != ',') {
+      if (isdigit(primeString[idx])) {
+        int num = atoi(s);
+      }
+    } else {
+      
+    }
+  }
 }
 
 /*
@@ -508,12 +523,10 @@ bool requirePublicKey(int publicKey) {
 /*
   Function to determine the power of a character
 */
-long int power(char character, int power) {
-  long int result;
+long long int power(char base, int power) {
+  long long int result;
 
-  for (result = character; power > 1; power--) {
-    result = result * result;
-  }
+  result = (long long int)pow(base, power);
 
   return result;
 }
