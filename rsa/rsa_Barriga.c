@@ -267,8 +267,8 @@ void main() {
           * (PRIVATE_KEY * PUBLIC_KEY) % TOTIENT = 1
 */
 char *rsa(char text[], int key, int product) {
-  char *result = calloc(strlen(text), sizeof(char)), currentChar;
-  int textIdx;
+  char *result = calloc(strlen(text), sizeof(char));
+  int textIdx, currentChar;
   long long int temp;
 
   if (result == NULL && key == -1) {
@@ -276,11 +276,22 @@ char *rsa(char text[], int key, int product) {
   }
   printf("rsa\n");
   for (textIdx = 0; textIdx < strlen(text); textIdx++) {
-    temp = (long long int)pow((double)text[textIdx], (double)key);
-    printf("%d %d %c\n", text[textIdx], temp,
-           ((long long int)pow((double)text[textIdx], (double)key)) % product);
     if (isgraph(text[textIdx])) {
-      result[textIdx] = temp % product;
+      printf("%d, %d, %lld\n", currentChar, currentChar, temp);
+
+      if (isupper(result[textIdx])) {
+        result[textIdx] =
+            (((long long int)pow((result[textIdx] - 'A'), key) % product) %
+             26) +
+            'A';
+      }
+
+      if (islower(result[textIdx])) {
+        result[textIdx] =
+            (((long long int)pow((result[textIdx] - 'a'), key) % product) %
+             26) +
+            'a';
+      }
     } else {
       result[textIdx] = text[textIdx];
     }
