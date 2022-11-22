@@ -59,9 +59,11 @@ void main() {
     printf("[13] Encrypt plain text\n");
     printf("[14] Decrypt cipher text\n");
     printf("[15] Save plain text to file\n");
-    printf("[16] Save cipher to file\n");
-    printf("[17] Save prime numbers to file\n");
-    printf("[18] Save new plain text to file\n");
+    printf("[16] Save prime numbers to file\n");
+    printf("[17] Save public key to file\n");
+    printf("[18] Save private key to file\n");
+    printf("[19] Save cipher to file\n");
+    printf("[20] Save new plain text to file\n");
     printf("-------------------------------\n");
     printf("Product: %d\n", product);
     printf("Totient: %d\n", totient);
@@ -114,6 +116,7 @@ void main() {
       scanf("%[^\n]", fileName);
       primeString = getFileContent(fileName);
       setPrimePairFromString(primeString, &primeP, &primeQ);
+      printf("Prime numbers: (%d, %d)\n", primeP, primeQ);
     }
 
     // Set product
@@ -218,8 +221,60 @@ void main() {
       }
     }
 
-    // Save cipher text to file
+    // Save prime numbers to file
     if (choice == 16) {
+      char temp[MAX];
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+
+      if (primeString != NULL) {
+        free(primeString);
+      }
+
+      primeString = calloc(MAX, sizeof(char));
+      sprintf(temp, "%d", primeP);
+      strcat(primeString, temp);
+      strcat(primeString, ',');
+      sprintf(temp, "%d", primeQ);
+      strcat(primeString, temp);
+
+      if (writeFileContent(primeString, fileName)) {
+        printf("Saved\n");
+      }
+    }
+
+    // Save public key to file
+    if (choice == 17) {
+      char temp[MAX];
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+
+      sprintf(temp, "%d", publicKey);
+      if (writeFileContent(temp, fileName)) {
+        printf("Saved\n");
+      }
+    }
+
+    // Save private key to file
+    if (choice == 18) {
+      char temp[MAX];
+      char fileName[MAX];
+      printf("File name: ");
+      fflush(stdin);
+      scanf("%[^\n]", fileName);
+
+      sprintf(temp, "%d", privateKey);
+      if (writeFileContent(newPlainText, fileName)) {
+        printf("Saved\n");
+      }
+    }
+
+    // Save cipher text to file
+    if (choice == 19) {
       char fileName[MAX];
       printf("File name: ");
       fflush(stdin);
@@ -229,19 +284,8 @@ void main() {
       }
     }
 
-    // Save prime numbers to file
-    if (choice == 17) {
-      char fileName[MAX];
-      printf("File name: ");
-      fflush(stdin);
-      scanf("%[^\n]", fileName);
-      if (writeFileContent(primeString, fileName)) {
-        printf("Saved\n");
-      }
-    }
-
     // Save new plain text to file
-    if (choice == 18) {
+    if (choice == 20) {
       char fileName[MAX];
       printf("File name: ");
       fflush(stdin);
@@ -342,15 +386,26 @@ void setPrivateKey(int *privateKey, int publicKey, int totient) {
   Function to set prime pair from string
 */
 void setPrimePairFromString(char *primeString, int *primeP, int *primeQ) {
-  int idx;
-
-  for (idx = 0; idx < strlen(primeString); idx++) {
+  int idx, flag;
+  *primeP = 0;
+  *primeQ = 0;
+  for (idx = 0, flag = 0; idx < strlen(primeString); idx++) {
     if (primeString[idx] != ',') {
       if (isdigit(primeString[idx])) {
-        int num = atoi(s);
+        int number = atoi(primeString[idx]);
+
+        if (flag = 0) {
+          *primeP += number;
+          *primeP *= 10;
+        }
+
+        if (flag = 1) {
+          *primeQ += number;
+          *primeQ *= 10;
+        }
       }
     } else {
-      
+      flag = 1;
     }
   }
 }
