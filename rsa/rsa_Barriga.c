@@ -236,7 +236,7 @@ void main() {
       primeString = calloc(MAX, sizeof(char));
       sprintf(temp, "%d", primeP);
       strcat(primeString, temp);
-      strcat(primeString, ',');
+      primeString[strlen(primeString)] = ',';
       sprintf(temp, "%d", primeQ);
       strcat(primeString, temp);
 
@@ -268,7 +268,7 @@ void main() {
       scanf("%[^\n]", fileName);
 
       sprintf(temp, "%d", privateKey);
-      if (writeFileContent(newPlainText, fileName)) {
+      if (writeFileContent(temp, fileName)) {
         printf("Saved\n");
       }
     }
@@ -389,25 +389,12 @@ void setPrimePairFromString(char *primeString, int *primeP, int *primeQ) {
   int idx, flag;
   *primeP = 0;
   *primeQ = 0;
-  for (idx = 0, flag = 0; idx < strlen(primeString); idx++) {
-    if (primeString[idx] != ',') {
-      if (isdigit(primeString[idx])) {
-        int number = atoi(primeString[idx]);
 
-        if (flag = 0) {
-          *primeP += number;
-          *primeP *= 10;
-        }
-
-        if (flag = 1) {
-          *primeQ += number;
-          *primeQ *= 10;
-        }
-      }
-    } else {
-      flag = 1;
-    }
+  for (idx = 0; idx < strlen(primeString) && primeString[idx] != ','; idx++) {
   }
+
+  *primeP = atoi(primeString);
+  *primeQ = atoi(&primeString[idx + 1]);
 }
 
 /*
