@@ -281,8 +281,6 @@ char *rsa(char text[], int key, int product) {
       result[textIdx] = text[textIdx];
     }
   }
-
-
   return result;
 }
 
