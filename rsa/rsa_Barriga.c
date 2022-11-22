@@ -1,5 +1,6 @@
 #include <conio.h>
 #include <ctype.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +26,7 @@ bool isFactorOfNumber(int x, int number);
 bool requirePrimePair(int primeP, int primeQ);
 bool requireTotient(int totient);
 bool requirePublicKey(int publicKey);
-int power(char character, int power);
+long int power(char character, int power);
 
 void main() {
   // Initial variable declaration
@@ -265,37 +266,46 @@ void main() {
 char *rsa(char text[], int key, int product) {
   char *result = calloc(strlen(text), sizeof(char)), currentChar;
   int textIdx;
+  long long int temp;
 
   if (result == NULL && key == -1) {
     return NULL;
   }
-
+  printf("rsa\n");
   for (textIdx = 0; textIdx < strlen(text); textIdx++) {
-    // if (isupper(text[textIdx])) {
-    result[textIdx] = (((power(text[textIdx], key)) % product) % 26);
-    // }
-
-    // if (islower(text[textIdx])) {
-    //   result[textIdx] =
-    //       (((pow(text[textIdx] - 'a', (double)key)) % product) % 26) + 'a';
-    // }
+    temp = pow(text[textIdx], key);
+    printf("%d %lld %d\n", text[textIdx], temp, temp % product);
+    if (isgraph(text[textIdx])) {
+      result[textIdx] = temp % product;
+    } else {
+      result[textIdx] = text[textIdx];
+    }
   }
+
+  return result;
 }
 
 /*
   Function to set public key with respect to the ff. constraints
   * Must be prime
   * Must be less than totient
-  * Musut not be a factor of the totient
+  * Must not be a factor of the totient
 */
 void setPublicKey(int *publicKey, int totient) {
-  int tempNum, idx;
+  int tempNum;
+  do {
+    printf(" * Must be prime\n");
+    printf(" * Must be less than totient\n");
+    printf(" * Must not be a factor of the totient\n");
+    printf("Enter public key value: ");
+    fflush(stdin);
+    scanf("%d", &tempNum);
 
-  for (idx = 2; idx < totient; idx++) {
-    if (isPrime(idx) && isFactorOfNumber(idx, totient) == false) {
-      tempNum = idx;
+    if (!isPrime(tempNum) || isFactorOfNumber(tempNum, totient) == true) {
+      printf("Please enter a valid a public key!\n");
     }
-  }
+
+  } while (!isPrime(tempNum) || isFactorOfNumber(tempNum, totient) == true);
 
   *publicKey = tempNum;
 }
@@ -310,10 +320,8 @@ void setPrivateKey(int *privateKey, int publicKey, int totient) {
   int tempNum, idx;
 
   for (idx = MAX; idx >= 0; idx--) {
-    printf("[%d] %d\n", idx, (idx * publicKey) % totient);
     if ((idx * publicKey) % totient == 1) {
       tempNum = idx;
-      printf("%d ", idx);
     }
   }
 
@@ -488,8 +496,8 @@ bool requirePublicKey(int publicKey) {
 /*
   Function to determine the power of a character
 */
-int power(char character, int power) {
-  int result;
+long int power(char character, int power) {
+  long int result;
 
   for (result = character; power > 1; power--) {
     result = result * result;
