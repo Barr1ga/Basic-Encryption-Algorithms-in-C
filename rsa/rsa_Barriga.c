@@ -7,6 +7,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "bn.c"
+
 #define MAX 100
 #define ENCRYPT 1
 #define DECRYPT 0
@@ -334,24 +336,41 @@ void main() {
 */
 char *rsa(char text[], int key, int product) {
   char *result = calloc(strlen(text), sizeof(char));
-  int textIdx;
+  int textIdx, smallResult;
+  struct bn bigCharacter, bigProduct, bigKey, powResult, modResult;
+
+  printf("Processing...\n");
+  bignum_from_int(&bigProduct, product);
 
   if (result == NULL && key == -1) {
     return NULL;
   }
-  printf("rsa\n");
-  printf("key: %d\n", key);
+
   for (textIdx = 0; textIdx < strlen(text); textIdx++) {
     if (isgraph(text[textIdx]) && !isspace(text[textIdx])) {
+      bignum_from_int(&bigCharacter, text[textIdx] - 'A');
+      bignum_from_int(&bigKey, key);
+      bignum_pow(&bigCharacter, &bigKey, &powResult);
+      bignum_mod(&powResult, &bigProduct, &modResult);
+      smallResult = bignum_to_int(&modResult);
+
       if (isupper(text[textIdx])) {
-        result[textIdx] =
-            (char)((power((text[textIdx] - 'A'), key) % product) + 'A');
+        result[textIdx] = (char)(smallResult + 'A');
       }
 
       if (islower(text[textIdx])) {
-        result[textIdx] =
-            (char)((power((text[textIdx] - 'a'), key) % product) + 'a');
+        result[textIdx] = (char)(smallResult + 'a');
       }
+
+      // if (isupper(text[textIdx])) {
+      //   result[textIdx] =
+      //       (char)((power((text[textIdx] - 'A'), key) % product) + 'A');
+      // }
+
+      // if (islower(text[textIdx])) {
+      //   result[textIdx] =
+      //       (char)((power((text[textIdx] - 'a'), key) % product) + 'a');
+      // }
     } else {
       result[textIdx] = text[textIdx];
     }
