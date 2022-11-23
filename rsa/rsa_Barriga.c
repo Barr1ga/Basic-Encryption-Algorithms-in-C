@@ -18,6 +18,7 @@ char *getFileContent(char fileName[]);
 void setPrimePairsFromString(char *primePairString, int *primeP, int *primeQ);
 void pause();
 void setPublicKey(int *publicKey, int totient);
+void displayPublicKeyOptions(int totient);
 void setPrimePairFromString(char *primeString, int *primeP, int *primeQ);
 void setPrivateKey(int *privateKey, int publicKey, int totient);
 void setProduct(int *product, int primeP, int primeQ);
@@ -29,6 +30,7 @@ bool isFactorOfNumber(int x, int number);
 bool requirePrimePair(int primeP, int primeQ);
 bool requireTotient(int totient);
 bool requirePublicKey(int publicKey);
+bool requirePrivateKey(int privateKey);
 long long int power(char base, int power);
 
 void main() {
@@ -38,23 +40,23 @@ void main() {
   // int primeP = -1, primeQ = -1, privateKey = -1, publicKey = -1, product =
   // -1,
   //     totient = -1, choice;
-  int primeP = 2, primeQ = 13, privateKey = -1, publicKey = 5, product = 26,
-      totient = 12, choice;
+  int primeP = -1, primeQ = -1, privateKey = -1, publicKey = -1, product = -1,
+      totient = -1, choice;
 
   // Menu page
   do {
     system("CLS");
     printf("-------------------------------\n");
-    printf("[0] Exit\n");
-    printf("[1] Set plain text\n");
-    printf("[2] Set plain text from file\n");
-    printf("[3] Set prime numbers\n");
-    printf("[4] Set prime numbers from file\n");
-    printf("[5] Set product\n");
-    printf("[6] Set totient\n");
-    printf("[7] Set public key\n");
-    printf("[8] Set public key from file\n");
-    printf("[9] Set private key\n");
+    printf("[0 ] Exit\n");
+    printf("[1 ] Set plain text\n");
+    printf("[2 ] Set plain text from file\n");
+    printf("[3 ] Set prime numbers\n");
+    printf("[4 ] Set prime numbers from file\n");
+    printf("[5 ] Set product\n");
+    printf("[6 ] Set totient\n");
+    printf("[7 ] Set public key\n");
+    printf("[8 ] Set public key from file\n");
+    printf("[9 ] Set private key\n");
     printf("[10] Set private key from file\n");
     printf("[11] Set cipher text\n");
     printf("[12] Set cipher text from file\n");
@@ -209,7 +211,7 @@ void main() {
     // Run rsa encryption
     if (choice == 13) {
       // Fails the cipher if key does not exist
-      if (requirePrimePair(primeP, primeQ) == true) {
+      if (requirePublicKey(publicKey) == true) {
         // If exists, free allocated memory
         if (cipherText != NULL) {
           free(cipherText);
@@ -222,7 +224,7 @@ void main() {
     // Run rsa decryption
     if (choice == 14) {
       // Fails the cipher if key does not exist
-      if (requirePrimePair(primeP, primeQ) == true) {
+      if (requirePublicKey(privateKey) == true) {
         // If exists, free allocated memory
         if (newPlainText != NULL) {
           free(newPlainText);
@@ -327,7 +329,7 @@ void main() {
       * Calculate TOTIENT = (PRIME_P - 1) * (PRIME_Q - 1)
       * Select PUBLIC_KEY
           * Must be prime
-          * Must not be less than TOTIENT
+          * Must be less than TOTIENT
           * Must not be a factor of the TOTIENT
       * Select private key
           * Product of PRIVATE_KEY and PUBLIC_KEY, divided by TOTIENT must
@@ -339,7 +341,7 @@ char *rsa(char text[], int key, int product) {
   int textIdx, smallResult;
   struct bn bigCharacter, bigProduct, bigKey, powResult, modResult;
 
-  printf("Processing...\n");
+  printf("Please wait as this may take a few minutes...\n");
   bignum_from_int(&bigProduct, product);
 
   if (result == NULL && key == -1) {
@@ -348,18 +350,24 @@ char *rsa(char text[], int key, int product) {
 
   for (textIdx = 0; textIdx < strlen(text); textIdx++) {
     if (isgraph(text[textIdx]) && !isspace(text[textIdx])) {
-      bignum_from_int(&bigCharacter, text[textIdx] - 'A');
+      if (isupper(text[textIdx])) {
+        bignum_from_int(&bigCharacter, text[textIdx] - 'A');
+      }
+      if (islower(text[textIdx])) {
+        bignum_from_int(&bigCharacter, text[textIdx] - 'a');
+      }
+
       bignum_from_int(&bigKey, key);
       bignum_pow(&bigCharacter, &bigKey, &powResult);
       bignum_mod(&powResult, &bigProduct, &modResult);
       smallResult = bignum_to_int(&modResult);
 
       if (isupper(text[textIdx])) {
-        result[textIdx] = (char)(smallResult + 'A');
+        result[textIdx] = (char)((smallResult % 26) + 'A');
       }
 
       if (islower(text[textIdx])) {
-        result[textIdx] = (char)(smallResult + 'a');
+        result[textIdx] = (char)((smallResult % 26) + 'a');
       }
 
       // if (isupper(text[textIdx])) {
@@ -378,6 +386,22 @@ char *rsa(char text[], int key, int product) {
   return result;
 }
 
+void displayPublicKeyOptions(int totient) {
+  int count;
+  printf("Please pick from the following public key options\n");
+  for (int idx, count = 0; idx < totient; idx++) {
+    if (isPrime(idx) && isFactorOfNumber(idx, totient) == false) {
+      printf("%4d ", idx);
+      count++;
+    }
+    if (count > 0 && count % 10 == 0) {
+      printf("\n");
+      count = 0;
+    }
+  }
+  printf("\n");
+}
+
 /*
   Function to set public key with respect to the ff. constraints
   * Must be prime
@@ -390,6 +414,7 @@ void setPublicKey(int *publicKey, int totient) {
     printf(" * Must be prime\n");
     printf(" * Must be less than totient\n");
     printf(" * Must not be a factor of the totient\n");
+    displayPublicKeyOptions(totient);
     printf("Enter public key value: ");
     fflush(stdin);
     scanf("%d", &tempNum);
@@ -595,6 +620,18 @@ bool requireTotient(int totient) {
 bool requirePublicKey(int publicKey) {
   if (publicKey == -1) {
     printf("Please set the public key value!\n");
+    return false;
+  }
+
+  return true;
+}
+
+/*
+  Function to require public key
+*/
+bool requirePrivateKey(int privateKey) {
+  if (privateKey == -1) {
+    printf("Please set the private key value!\n");
     return false;
   }
 
