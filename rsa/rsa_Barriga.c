@@ -370,15 +370,6 @@ char *rsa(char text[], int key, int product) {
         result[textIdx] = (char)((smallResult % 26) + 'a');
       }
 
-      // if (isupper(text[textIdx])) {
-      //   result[textIdx] =
-      //       (char)((power((text[textIdx] - 'A'), key) % product) + 'A');
-      // }
-
-      // if (islower(text[textIdx])) {
-      //   result[textIdx] =
-      //       (char)((power((text[textIdx] - 'a'), key) % product) + 'a');
-      // }
     } else {
       result[textIdx] = text[textIdx];
     }
